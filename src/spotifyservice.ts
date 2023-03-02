@@ -2,8 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { LoginComponent } from './app/login/login.component';
 
 
@@ -57,26 +57,7 @@ export class SpotifyService {
     window.location.href = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
     return of({});
   }
-
-
-          //ashah03122003@gmail.com
-        //MAKE ANOTHER BOX FOR ACCOUNT ID
-        //31fh4vqmbqlft3aoc2lbpqus52eq
-        //31fh4vqmbqlft3aoc2lbpqus52eq
-        //console.log(this.getUserId()); 
-
-//assuming I have the access token write me code in SpotifyService.ts to make a file angular to make an API request to the Spotify Accounts Serice to ass a user to my Spotify Developer dashboard account. the request should include the users full name and email.
-//Automatic user provisioning is a process in which user accounts are created and managed automatically, rather than being created and managed manually. To implement automatic user provisioning for your Spotify app, you'll need to use a third-party identity management platform that supports the SCIM (System for Cross-domain Identity Management) standard.
-
-// Here's a high-level overview of the process:
-
-// Set up a SCIM-compatible identity management platform, such as Okta, OneLogin, or Microsoft Azure Active Directory.
-// Configure the identity management platform to communicate with the Spotify API by creating a SCIM API key.
-// Use the API key to automate the process of creating and managing user accounts in your Spotify app. You'll use the API to create new user accounts, update existing accounts, and delete accounts that are no longer needed.
-// This way, you won't have to manually add each user to your Spotify app. The process will be automated, allowing you to scale your app more easily and manage user accounts more efficiently.
-
-
-    
+ 
   async handleAuthorizationResponse() { // gets me the access token
     
     const clientId = '3571de52a7d747358b31518e6b0e6b1f';
@@ -197,32 +178,67 @@ export class SpotifyService {
     })
   );
   }
- 
 
-
-
-  getRandomSongsFromRapCategory(): Observable<Song[]> { //FIX THIS TO RETURN SONGS FROM THE PLAYLIST. RIGHT NOW CATEGORY IS RETURING PLAYLIST
+  getRandomSongsFromRapCategory(): Observable<Playlist[]> {
     return this.getCategoryId('Pop').pipe(
       switchMap(rapCategoryId => {
         if (!rapCategoryId) {
           return of([]);
         }
   
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${this.accessToken}`);
+        const headers = new HttpHeaders({
+          'Authorization': `Bearer ${this.accessToken}`
+        });
   
-        return this.http.get<SongResponse[]>(`https://api.spotify.com/v1/browse/categories/${rapCategoryId}/playlists`, { headers })
+        return this.http.get<any>(`https://api.spotify.com/v1/browse/categories/${rapCategoryId}/playlists`, { headers })
           .pipe(
-            map(songsResponse => songsResponse.map(songResponse => ({ // NOW ERROR HERE
-              id: songResponse.id,
-              name: songResponse.name,
-              imageUrl: songResponse.imageUrl,
-              audioUrl: songResponse.audioUrl
-            })))
+            switchMap(response => {
+              const playlistObservables = response.playlists.items.map((playlist: {
+                uri: any; id: string; name: string; imageURL: string 
+}) => {
+                // Fetch the playlist ID from the 'uri' property
+                const id = playlist.uri.split(':')[2];
+                return this.getSongsFromPlaylist(id).pipe(
+                  map(songs => ({
+                    id: id,
+                    name: playlist.name,
+                    songs: songs
+                  } as Playlist))
+                );
+              });
+              return forkJoin(playlistObservables);
+            }),
+            map(playlists => playlists as Playlist[])
           );
       })
     );
   }
+  
+  getSongsFromPlaylist(playlistId: string): Observable<Array<Song>> {
+    const headers = new HttpHeaders({
+        'Authorization': `Bearer ${this.accessToken}`
+      });
 
+    return this.http.get<any>(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, { headers })
+      .pipe(
+        // tap((response: any) => console.log('Response:', response)),
+        // catchError(error => {
+        //   console.error('Error:', error);
+        //   return of([]);
+        // }),
+        map(response => {
+          return response.items.map((song: any) => {
+            //console.log(song.track.name) //work on first try yayyyy
+            return {
+              id: song.track.id,
+              name: song.track.name,
+              imageUrl: song.track.album.images[0].url,
+              audioUrl: song.track.preview_url
+            } as Song;
+          });
+        })
+      );
+  }
 
 
   getSongs(userId: string,  playlistId: string): Observable<Array<Song>> {
