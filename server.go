@@ -19,20 +19,20 @@ func main() {
 		fmt.Fprintln(response, "Router is running...")
 	})
 
-	router.HandleFunc("/groupPost", getGroups).Methods("GET")
-	router.HandleFunc("/groupPost", addGroups).Methods("POST", "OPTIONS")
-	router.HandleFunc("/groupPost/{groupID}", getGroup).Methods("GET")
-	router.HandleFunc("/groupPost/{groupID}", deleteGroup).Methods("DELETE")
-	router.HandleFunc("/groupPost/{groupID}", putGroup).Methods("PUT")
-	router.HandleFunc("/groupUpdateUsers/", updateGroupUsers).Methods("PUT")
+	router.HandleFunc("/groupPost", getGroups).Methods("GET")                //donetesting
+	router.HandleFunc("/groupPost", addGroups).Methods("POST", "OPTIONS")    //donetesting
+	router.HandleFunc("/groupPost/{groupID}", getGroup).Methods("GET")       //donetesting
+	router.HandleFunc("/groupPost/{groupID}", deleteGroup).Methods("DELETE") //donetesting
+	router.HandleFunc("/groupPost/{groupID}", putGroup).Methods("PUT")       //donetesting
+	router.HandleFunc("/groupUpdateUsers/", updateGroupUsers).Methods("PUT") //donetesting
 	router.HandleFunc("/userPost", addUsers).Methods("POST")
 	router.HandleFunc("/userPost", putUsers).Methods("PUT")
 	router.HandleFunc("/userUpdateFriends/", updateUserFriends).Methods("PUT")
 	router.HandleFunc("/userUpdateGroups/", updateUserGroups).Methods("PUT")
-	router.HandleFunc("/userUpdatePlaylists/", updatePlaylistName).Methods("PUT")
+	router.HandleFunc("/userUpdatePlaylists/", updatePlaylistName).Methods("PUT") //needs testing
 
-	router.HandleFunc("/addSong/{groupID}", addGroupLikedSong).Methods("PUT")
-	router.HandleFunc("/checkIfMatched/{groupID}/{songID}", checkIfMatched).Methods("GET")
+	router.HandleFunc("/addSong/{groupID}", addGroupLikedSong).Methods("PUT")              //done testing
+	router.HandleFunc("/checkIfMatched/{groupID}/{songID}", checkIfMatched).Methods("GET") //done testing
 
 	router.HandleFunc("/userPost/{userID}", getUser).Methods("GET")
 	router.HandleFunc("/userPost", getUsers).Methods("GET")

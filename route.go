@@ -87,6 +87,7 @@ func addGroups(resp http.ResponseWriter, req *http.Request) {
 		resp.Write([]byte(`{"error": "Error unmarshalling the groups array"}`))
 		return
 	}
+
 	groupRepo.Save(&group)
 	resp.WriteHeader(http.StatusOK)
 	json.NewEncoder(resp).Encode(group)
@@ -209,7 +210,7 @@ If there is an error, it returns a 500 status code and an error message.
 
 func putGroup(resp http.ResponseWriter, req *http.Request) {
 	resp.Header().Set("Content-type", "application/json")
-	var group entity.Group // The JSON body should have
+	var group entity.Group // The JSON body is decoded into this variable.
 	err := json.NewDecoder(req.Body).Decode(&group)
 	if err != nil {
 		resp.WriteHeader(http.StatusInternalServerError)
@@ -273,7 +274,6 @@ func updatePlaylistName(resp http.ResponseWriter, req *http.Request) {
 	groupRepo.Update(&group)
 	resp.WriteHeader(http.StatusOK)
 	json.NewEncoder(resp).Encode(groupFromRepo)
-
 }
 
 func updateGroupUsers(resp http.ResponseWriter, req *http.Request) {
